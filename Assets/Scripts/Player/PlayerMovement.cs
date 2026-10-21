@@ -107,7 +107,7 @@ namespace MetroPlatform.Player
         private bool Grounded()
         {
             RaycastHit2D raycastHit = Physics2D.Raycast(_groundCheckT.position,
-                Vector2.down, 0.05=0f, _jumpLayerMask);
+                Vector2.down, 0.05f, _jumpLayerMask);
             
             Debug.DrawRay(_groundCheckT.position, Vector2.down, Color.red, 2f);
             return raycastHit.collider != null;
