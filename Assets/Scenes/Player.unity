@@ -976,6 +976,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3506410371843196963, guid: 78925e864ce7e10429bdf7001a78f7c9, type: 3}
   m_PrefabInstance: {fileID: 4257938622848245228}
   m_PrefabAsset: {fileID: 0}
+--- !u!61 &1418054531 stripped
+BoxCollider2D:
+  m_CorrespondingSourceObject: {fileID: 8480023928951907027, guid: 78925e864ce7e10429bdf7001a78f7c9, type: 3}
+  m_PrefabInstance: {fileID: 4257938622848245228}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1787700489
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,8 +1149,36 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1849328460}
     - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _groundHit
+      value: 
+      objectReference: {fileID: 1418054531}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _timerJump.Name
+      value: _timerJump
+      objectReference: {fileID: 0}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
       propertyPath: _coyotaTimeTotal
       value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _coyotaTimeCounter
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _jumpFallForceActing
+      value: -10.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _timerFall.Debugging
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _timerJump.Debugging
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2003115141821425881, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
+      propertyPath: _timerJump._timeTotal
+      value: 0.35
       objectReference: {fileID: 0}
     - target: {fileID: 3265070499640264852, guid: 20c0e4eb1db781f4bb5425f02de33c25, type: 3}
       propertyPath: m_LocalPosition.y

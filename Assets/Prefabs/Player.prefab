@@ -320,16 +320,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   _walkSpeed: 6
-  _jumpForce: 9
+  _jumpForce: 18
   _jumpLayerMask:
     serializedVersion: 2
     m_Bits: 3145728
-  _jumpTimeTotal: 0.15
+  _jumpTimeTotal: 0.35
+  _inputBufferJumpTotal: 0.15
+  _inputBufferJumpCounter: 0
+  _jumpFallAcceleration: 0.5
+  _coyotaTimeTotal: 0.1
+  _coyotaTimeCounter: 0
   _moveHorizontal: 0
+  _grounded: 0
+  _groundHit: {fileID: 0}
   _moveVertical: 0
-  _jumping: 0
-  _jumpCounter: 0
+  _timerJump:
+    Debugging: 0
+    Name: 
+    _timeTotal: 0
+    _timeCounter: 0
+    <IsRunning>k__BackingField: 0
+  _timerFall:
+    Debugging: 0
+    Name: 
+    _timeTotal: 0
+    _timeCounter: 0
+    <IsRunning>k__BackingField: 0
+  _timerCoyoteTime:
+    Debugging: 0
+    Name: 
+    _timeTotal: 0
+    _timeCounter: 0
+    <IsRunning>k__BackingField: 0
+  _timers: []
+  _jumpFallForceActing: 0
   _playerInput: {fileID: 1737661774549278775}
+  _visuals: {fileID: 0}
+  _animator: {fileID: 0}
   _rigidbody: {fileID: 3722886066832384003}
   _groundCheckColl: {fileID: 6606933895773263445}
 --- !u!114 &1737661774549278775

@@ -3,7 +3,8 @@ using System;
 
 namespace MetroPlatform
 {
-    public class TimerCountdown : MonoBehaviour
+    [Serializable]
+    public class TimerCountdown
     {
         public bool Debugging = false;
         public string Name = "DefaultName";
@@ -14,6 +15,7 @@ namespace MetroPlatform
 
         public bool IsFinished => _timeCounter <= 0;
         public float Progress => 1 - (_timeCounter / _timeTotal);
+        public float ProgressReversed => _timeCounter / _timeTotal;
         
         public event Action TimerStart = delegate { };
         public event Action TimerStop = delegate { };
@@ -26,30 +28,29 @@ namespace MetroPlatform
             Name = name;
         }
         
-        void Start(float newTimeTotal)
+        public void Start(float newTimeTotal)
         {
             _timeTotal = newTimeTotal;
             Start();
         
         }
         
-        void Start()
+        public void Start()
         {
             if (Debugging)
-            {
                 Debug.Log($"Time {Name} Start. TimeTotal: {_timeTotal}");
-            }
-            
-            
+
+            _timeCounter = _timeTotal;
+
             if (!IsRunning)
             {
                 IsRunning = true;
                 TimerStart.Invoke();
             }
         }
-
+        
         // Update is called once per frame
-        void Stop()
+        public void Stop()
         {
             if (Debugging)
             {
@@ -70,7 +71,7 @@ namespace MetroPlatform
                 _timeCounter -= deltaTime;
             }
 
-            if (IsRunning && _timeCounter < 0)
+            if (IsRunning && _timeCounter <= 0)
             {
                 Stop();
             }

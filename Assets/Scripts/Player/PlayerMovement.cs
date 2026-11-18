@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 // ReSharper disable All
 
 namespace MetroPlatform.Player
@@ -14,6 +15,7 @@ namespace MetroPlatform.Player
         [SerializeField] private float _jumpTimeTotal = 0.15f;
         [SerializeField] private float _inputBufferJumpTotal = 0.15f;
         [SerializeField] private float _inputBufferJumpCounter;
+        [SerializeField] private float _jumpFallAcceleration = 0.5f;
         
         [SerializeField] private float _coyotaTimeTotal = 0.15f;
         [SerializeField] private float _coyotaTimeCounter;
@@ -22,19 +24,27 @@ namespace MetroPlatform.Player
         // Serializing for debug purposes
         [Header("Inner Workings")]
         [SerializeField] private float _moveHorizontal;
+        
         //jump
-        private bool _canJump;
+        [SerializeField] private float _jumpFallForceActing;
+        [SerializeField] private bool _canJump;
         [SerializeField] private bool _grounded;
         [SerializeField] private Collider2D _groundHit;
 
 
 
         [SerializeField] private float _moveVertical;
-        [SerializeField] private bool _jumping;
-        [SerializeField] private float _jumpCounter;
+        
         
         private float _inputAxisX => _playerInput.InputAxisX;
         private bool _inputJump => _playerInput.InputJump;
+        
+        
+        //Timers
+        [SerializeField] private TimerCountdown _timerJump;
+        [SerializeField] private TimerCountdown _timerFall;
+        [SerializeField] private TimerCountdown _timerCoyoteTime;
+        [SerializeField] private List<TimerCountdown> _timers;
         
         [Header("References")]
         [SerializeField] private PlayerInput _playerInput;
@@ -45,9 +55,10 @@ namespace MetroPlatform.Player
         
         private static readonly int AnimVelocityX = Animator.StringToHash("VelocityX");
         private static readonly int AnimJumping = Animator.StringToHash("Jumping");
+        private static readonly int AnimFalling = Animator.StringToHash("Falling");
 
 
-        private void Start()
+        private void Awake()
         {
             if(_rigidbody == null)
                 _rigidbody = GetComponent<Rigidbody2D>();
@@ -55,31 +66,60 @@ namespace MetroPlatform.Player
                 _animator = _visuals.GetComponent<Animator>();
             if (_playerInput == null)
                 _playerInput = GetComponent<PlayerInput>();
+            InitializeTimers();
+        }
+        
+        private void InitializeTimers()
+        {
+            _timerJump = new TimerCountdown(_jumpTimeTotal, "_timerJump");
+            _timerFall = new TimerCountdown(999f, "_timerFall");
+            _timerCoyoteTime = new TimerCountdown(_coyotaTimeTotal, "_timerCoyoteTime");
+            
+            //Events
+            _timerJump.TimerStart += () =>
+            {
+                _animator.SetBool(AnimJumping, _timerJump.IsRunning);
+            };
+            _timerJump.TimerStop += () =>
+            {
+                _timerFall.Start();
+                _animator.SetBool(AnimJumping, _timerJump.IsRunning);
+                _animator.SetBool(AnimFalling, _timerFall.IsRunning);
+            };
+            _timerFall.TimerStart += () => _jumpFallForceActing = 0f;
+            
+            _timerFall.TimerStop += () =>
+            {
+                _animator.SetBool(AnimFalling, _timerFall.IsRunning);
+            };
+
+            _timers = new List<TimerCountdown>(3)
+            {
+                _timerJump,
+                _timerFall,
+                _timerCoyoteTime
+            };
         }
 
         private void Update()
         {
-            // Input
             _inputBufferJump(_inputJump);
-            OnJump(_inputBufferJumpCounter > 0);
-            
             _canJump = CanJump();
-            
-            //Jump timer
-            if (_jumping)
-            {
-                _jumpCounter -= Time.deltaTime;
-                if (_jumpCounter <= 0f)
-                {
-                    _jumping = false;
-                }
-            }
-            
-            //Visuals
+            OnJump(_inputBufferJumpCounter > 0f);
+
+            UpdateTimers();
 
             Animate();
             Flip(_inputAxisX);
+        }
 
+        private void UpdateTimers()
+        {
+            foreach (var timer in _timers)
+            {
+                if (timer.IsRunning)
+                    timer.Tick(Time.deltaTime);
+            }
         }
         
         private void FixedUpdate()
@@ -88,17 +128,34 @@ namespace MetroPlatform.Player
             _moveHorizontal = FixedMove(_inputAxisX); 
             
             //Jump
-            _moveVertical = FixedJump(_jumping);
+            if (_timerJump.IsRunning)
+                _moveVertical = FixedJump();
+            //Fall
+            else if (_timerFall.IsRunning)
+                _moveVertical = FixedFall();
+            
+            //Check if we should change Character state
+            ChangeTimersState();
             
             //Finally using force
             _rigidbody.linearVelocity = new Vector2(_moveHorizontal, _moveVertical); 
+        }
+        
+        private void ChangeTimersState()
+        {
+            //Stop
+            if (_timerFall.IsRunning && _grounded)
+                _timerFall.Stop();
+
+            //Stop jumping if grounded
+            if (_timerJump.IsRunning && _grounded && _timerJump.Progress > 0.3f)
+                _timerJump.Stop();
         }
 
         //Visuals
         private void Animate()
         {
             _animator.SetFloat(AnimVelocityX, Mathf.Abs(_inputAxisX));
-            _animator.SetBool(AnimJumping, !_grounded);
         }
 
         private void Flip(float _inputAxisX)
@@ -130,14 +187,11 @@ namespace MetroPlatform.Player
             _grounded = Grounded();
             if (_grounded)
             {
-                _coyotaTimeCounter = _coyotaTimeTotal;
-            }
-            else if (_coyotaTimeCounter > 0)
-            {
-                _coyotaTimeCounter -= Time.deltaTime;
+                _timerCoyoteTime.Reset();
+                _timerCoyoteTime.Start();
             }
 
-            return _coyotaTimeCounter > 0;
+            return _timerCoyoteTime.IsRunning && !_timerJump.IsRunning;
         }
 
 
@@ -153,27 +207,23 @@ namespace MetroPlatform.Player
             return inputAxis * _walkSpeed;
         }
         
-        private float FixedJump(bool jumping)
+        private float FixedJump()
         {
-            if (jumping)
-            {
-                var progress = _jumpCounter / _jumpTimeTotal;
-                Debug.Log($"progress : {progress}");
-                return _jumpForce;
-            }
-
-            return 0f;
+            return _jumpForce * _timerJump.ProgressReversed;
+        }
+        
+        private float FixedFall()
+        {
+            _jumpFallForceActing -= _jumpFallAcceleration;
+            return _jumpFallForceActing;
         }
         
         
         // Events
         private void OnJump(bool inputJump)
         {
-            if (inputJump && _canJump)
-            {
-                _jumping = true;
-                _jumpCounter = _jumpTimeTotal;
-            }
+            if (inputJump && _canJump && !_timerJump.IsRunning)
+                _timerJump.Start();
         }
         
         // Checks
